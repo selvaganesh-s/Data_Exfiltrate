@@ -1,0 +1,131 @@
+#include <NGAP-PDU.h>
+#include <aprtn_application.h>
+#include <ngapAgf.h>
+#include <sctpEndpointadress.h>
+#include <ProcedureCode.h>
+//​#include <cstring> // For memset
+//​#include <cstdlib>
+#include <ngapStat.h>
+#include <SuccessfulOutcome.h>
+
+NgapAgf::NgapAgf(){
+}
+
+#include <stdio.h>
+
+int main
+
+void NgapAgf::handleIncomingSctpMessage_v(uin​t8_t *message_p, uint32_t messageLength,cmn::SctpEndPointAddress_t &peerAddr)
+{
+NGAP_PDU_t decpdu = {(NGAP_PDU_PR_NOTHING)};
+NGAP_PDU_t *decpdu_p = &decpdu;
+asn_dec_rval_t dec_ret = {(RC_OK)};
+
+memset((void *)decpdu_p, 0, sizeof(NGAP_PDU_t));
+dec_ret = aper_decode(NULL, &asn_DEF_NGAP_PDU, (void **)decpdu_p, message_p, messageLength, 0, 0);
+if (dec_ret.code != RC_OK)
+{
+Stats.incrementNgapCounter(ngapMsg_Dec_E​rror_c);
+// TRACE(ILOG_ERR, "asn_DEF_NGAP_PDU DECODE PDU FAILED :%D", dec_ret.code);
+free(message_p);
+return;
+}
+if (decpdu.present == NGAP_PDU_PR_initiatingMessage)
+{
+Stats.incrementNgapCounter(initiating_Me​ssage_Rcvd_c);
+handleInitiatingMessage_v(*(decpdu.choic​e.initiatingMessage), peerAddr);
+}
+else if (decpdu.present == NGAP_PDU_PR_successfulOutcome)
+{
+Stats.incrementNgapCounter(successful_Ou​tcome_Rcvd_c);
+handleSuccessfulOutcome_v(*(decpdu.choic​e.successfulOutcome),peerAddr);
+free(decpdu.choice.successfulOutcome);
+}
+free(decpdu.choice.initiatingMessage);
+}
+
+void NgapAgf::handleInitiatingMessage_v(const InitiatingMessage& initiatingMessage_r, cmn::SctpEndPointAddress_t &peerAddr)
+{
+
+// TRACE(ILOG_DEBUG, "Method entry :%Id", initiatingMessage_r.procedureCode);
+switch (initiatingMessage_r.procedureCode)
+{
+case ProcedureCode_id_DownlinkNASTransport:
+{
+Stats.incrementNgapCounter(DownlinkNasTr​ansportMessage_Rcvd_c);
+handleDownlinkNasTransportMessage_v( initiatingMessage_r.value.choice.Downlin​kNASTransport, peerAddr);
+break;
+}
+case ProcedureCode_id_InitialContextSetup:
+{
+Stats.incrementNgapCounter(initialContex​tSetupRequest_Message_Rcvd_c);
+handleInitalContextSetupMessage_v(initia​tingMessage_r.value.choice.InitialContex​tSetupRequest, peerAddr);
+break;
+}
+case ProcedureCode_id_PDUSessionResourceSetup​:
+{
+Stats.incrementNgapCounter(pduSessionRes​ourceSetupRequest_Message_Rcvd_c);
+handlePDUSessionResourceSetupMessage_v(i​nitiatingMessage_r.value.choice.PDUSessi​onResourceSetupRequest, peerAddr);
+break;
+}
+case ProcedureCode_id_NGSetup:
+{
+Stats.incrementNgapCounter(NGsetupReques​tMessage_Sent_c);
+handleNGSetupRequestMessage_v(initiating​Message_r.value.choice.NGSetupRequest, peerAddr);
+break;
+}
+case ProcedureCode_id_PDUSessionResourceRelea​se:
+{
+Stats.incrementNgapCounter(pduSessionRes​ourceReleaseCommand_Message_Rcvd_c);
+handlePDUSessionReleaseMessage_v(initiat​ingMessage_r.value.choice.PDUSessionReso​urceReleaseCommand, peerAddr);
+break;
+}
+case ProcedureCode_id_UEContextRelease:
+{
+Stats.incrementNgapCounter(ueContextRele​aseCommand_Message_Rcvd_c);
+handleUEContextReleaseMessage_v(initiati​ngMessage_r.value.choice.UEContextReleas​eCommand, peerAddr);
+break;
+}
+default:
+{
+// free(message_p);
+return;
+}
+}
+}
+
+
+void NgapAgf::handleSuccessfulOutcome_v(const SuccessfulOutcome& SuccessfulOutcome_r, cmn::SctpEndPointAddress_t &peerAddr)
+{
+
+// TRACE(ILOG_DEBUG, "Method entry :%Id", SuccessfulOutcome_r.procedureCode);
+switch (SuccessfulOutcome_r.procedureCode)
+{
+case ProcedureCode_id_NGSetup:
+{
+instance.incrementNgapCounter(NGsetupRes​ponce_Rcvd_c);
+handleNGSetupResponseMessage_v(Successfu​lOutcome_r.value.choice.NGSetupResponse, peerAddr);
+break;
+}
+}
+
+
+}
+
+void handleInitiatingMessage_v(const InitiatingMessage& initiatingMessage_r, cmn::SctpEndPointAddress_t &peerAddr);
+void handleSuccessfulOutcome_v(const SuccessfulOutcome& SuccessfulOutcome_r, cmn::SctpEndPointAddress_t &peerAddr);
+void handleDownlinkNasTransportMessage_v(cons​t DownlinkNASTransport_t& msg, cmn::SctpEndPointAddress_t &peerAddr);
+void handleInitalContextSetupMessage_v( const InitialContextSetupRequest_t& msg, cmn::SctpEndPointAddress_t &peerAddr);
+void handlePDUSessionResourceSetupMessage_v(c​onst PDUSessionResourceSetupRequest_t& msg, cmn::SctpEndPointAddress_t &peerAddr);
+void handleNGSetupRequestMessage_v(const NGSetupRequest_t& msg, cmn::SctpEndPointAddress_t &peerAddr);
+void handlePDUSessionReleaseMessage_v(const PDUSessionResourceReleaseCommand_t& msg, cmn::SctpEndPointAddress_t &peerAddr);
+void handleUEContextReleaseMessage_v(const UEContextReleaseCommand_t& msg, cmn::SctpEndPointAddress_t &peerAddr);
+
+void handleNGSetupResponseMessage_v(const NGSetupResponse_t& msg, cmn::SctpEndPointAddress_t &peerAddr);
+
+
+int main ()
+{
+
+return 0;
+} 
