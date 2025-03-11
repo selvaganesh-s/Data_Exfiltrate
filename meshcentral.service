@@ -1,0 +1,17 @@
+[Unit]
+Description=MeshCentral Server
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/node /home/ubuntu/node_modules/meshcentral
+WorkingDirectory=/home/ubuntu/node_modules/meshcentral
+User=ubuntu
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Restart=always
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=meshcentral
+
+[Install]
+WantedBy=multi-user.target
